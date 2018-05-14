@@ -1,3 +1,7 @@
+
+'''
+python detect_cpu.py cfg/yolo.cfg ~/data_public/yolo/yolo.weights data/dog.jpg
+'''
 import sys
 import time
 from PIL import Image, ImageDraw
