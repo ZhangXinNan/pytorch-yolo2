@@ -59,20 +59,29 @@ def data_augmentation(img, shape, jitter, hue, saturation, exposure):
 
     swidth =  ow - pleft - pright
     sheight = oh - ptop - pbot
-
+    # crop 比例
     sx = float(swidth)  / ow
     sy = float(sheight) / oh
     
-    flip = random.randint(1,10000)%2
+    # flip = random.randint(1,10000)%2
+    flip = random.randint(1,10000)%7
     cropped = img.crop( (pleft, ptop, pleft + swidth - 1, ptop + sheight - 1))
-
+    # dx = float(pleft)/float(swidth)
     dx = (float(pleft)/ow)/sx
     dy = (float(ptop) /oh)/sy
 
     sized = cropped.resize(shape)
-
-    if flip: 
-        sized = sized.transpose(Image.FLIP_LEFT_RIGHT)
+    # import PIL
+    transpose_method = [0,
+                        Image.FLIP_LEFT_RIGHT,
+                        Image.FLIP_TOP_BOTTOM,
+                        Image.ROTATE_90,
+                        Image.ROTATE_180,
+                        Image.ROTATE_270,
+                        Image.TRANSPOSE]
+    if flip:
+        # sized = sized.transpose(Image.FLIP_LEFT_RIGHT)
+        sized = sized.transpose(transpose_method[flip])
     img = random_distort_image(sized, hue, saturation, exposure)
     
     return img, flip, dx,dy,sx,sy 
@@ -91,7 +100,7 @@ def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
             y1 = bs[i][2] - bs[i][4]/2
             x2 = bs[i][1] + bs[i][3]/2
             y2 = bs[i][2] + bs[i][4]/2
-            
+            # x1 = min(0.999, max(0, x1*swidth/ow - pleft/swidth))
             x1 = min(0.999, max(0, x1 * sx - dx)) 
             y1 = min(0.999, max(0, y1 * sy - dy)) 
             x2 = min(0.999, max(0, x2 * sx - dx))
@@ -102,8 +111,20 @@ def fill_truth_detection(labpath, w, h, flip, dx, dy, sx, sy):
             bs[i][3] = (x2 - x1)
             bs[i][4] = (y2 - y1)
 
-            if flip:
-                bs[i][1] =  0.999 - bs[i][1] 
+            if flip == 3 or flip == 5 or flip == 6:
+                bs[i][3], bs[i][4] = bs[i][4], bs[i][3]
+            if flip==1:
+                bs[i][1] =  0.999 - bs[i][1]
+            elif flip==2:
+                bs[i][2] =  0.999 - bs[i][2]
+            elif flip==3:
+                bs[i][1], bs[i][2] = bs[i][2], 0.999 - bs[i][1]
+            elif flip==4:
+                bs[i][1], bs[i][2] = 0.999 - bs[i][1], 0.999 - bs[i][2]
+            elif flip==5:
+                bs[i][1], bs[i][2] = 0.999 - bs[i][2], bs[i][1]
+            elif flip==6:
+                bs[i][1], bs[i][2] = bs[i][2], bs[i][1]
             
             if bs[i][3] < 0.001 or bs[i][4] < 0.001:
                 continue

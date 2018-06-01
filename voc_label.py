@@ -11,6 +11,7 @@ classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat"
 
 
 def convert(size, box):
+    '''x,y是中心坐标，x,y,w,h分别除以图像宽高'''
     dw = 1./size[0]
     dh = 1./size[1]
     x = (box[0] + box[1])/2.0
@@ -44,11 +45,13 @@ def convert_annotation(year, image_id):
         out_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
 
 wd = getcwd()
-
+# 读取每年（2012、2007）、每类（train、val）数据集
 for year, image_set in sets:
     if not os.path.exists('VOCdevkit/VOC%s/labels/'%(year)):
         os.makedirs('VOCdevkit/VOC%s/labels/'%(year))
+    # 读取train/val的文件id
     image_ids = open('VOCdevkit/VOC%s/ImageSets/Main/%s.txt'%(year, image_set)).read().strip().split()
+    # 输出文件列表
     list_file = open('%s_%s.txt'%(year, image_set), 'w')
     for image_id in image_ids:
         list_file.write('%s/VOCdevkit/VOC%s/JPEGImages/%s.jpg\n'%(wd, year, image_id))
