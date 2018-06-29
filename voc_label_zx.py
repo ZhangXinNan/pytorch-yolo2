@@ -1,9 +1,9 @@
 #encoding=utf8
 import xml.etree.ElementTree as ET
-import pickle
+# import pickle
 import os
-from os import listdir, getcwd
-from os.path import join
+# from os import listdir, getcwd
+# from os.path import join
 
 sets=[('2012', 'train'), ('2012', 'val'), ('2007', 'train'), ('2007', 'val'), ('2007', 'test')]
 
@@ -24,9 +24,9 @@ def convert(size, box):
     h = h*dh
     return (x,y,w,h)
 
-def convert_annotation(year, image_id):
-    in_file = open('VOCdevkit/VOC%s/Annotations/%s.xml'%(year, image_id))
-    out_file = open('VOCdevkit/VOC%s/labels/%s.txt'%(year, image_id), 'w')
+def convert_annotation(year, image_id, in_file, out_file):
+    # in_file = open('VOCdevkit/VOC%s/Annotations/%s.xml'%(year, image_id))
+    # out_file = open('VOCdevkit/VOC%s/labels/%s.txt'%(year, image_id), 'w')
     tree=ET.parse(in_file)
     root = tree.getroot()
     size = root.find('size')
@@ -44,19 +44,29 @@ def convert_annotation(year, image_id):
         bb = convert((w,h), b)
         out_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
 
-wd = getcwd()
+wd = os.getcwd()
 # 读取每年（2012、2007）、每类（train、val）数据集
 for year, image_set in sets:
+    print year, image_set
     # 存结果文件夹, image_id.txt(cls_id,x,y,w,h)
-    if not os.path.exists('VOCdevkit/VOC%s/labels/'%(year)):
-        os.makedirs('VOCdevkit/VOC%s/labels/'%(year))
+    labels_dir = 'VOCdevkit/VOC%s/labels/'%(year)
+    if not os.path.exists(labels_dir):
+        os.makedirs(labels_dir)
     # 读取train/val的文件id
-    image_ids = open('VOCdevkit/VOC%s/ImageSets/Main/%s.txt'%(year, image_set)).read().strip().split()
+    image_ids_file = 'VOCdevkit/VOC%s/ImageSets/Main/%s.txt'%(year, image_set)
+    image_ids = open(image_ids_file).read().strip().split()
     # 输出文件列表
     list_file = open('%s_%s.txt'%(year, image_set), 'w')
+    print '\t', 'input id:', image_ids_file
+    print '\t', 'output list:', '%s_%s.txt'%(year, image_set)
+
     for image_id in image_ids:
         # 输出文件列表
         list_file.write('%s/VOCdevkit/VOC%s/JPEGImages/%s.jpg\n'%(wd, year, image_id))
-        convert_annotation(year, image_id)
+        in_file = open('VOCdevkit/VOC%s/Annotations/%s.xml'%(year, image_id))
+        out_file = open('VOCdevkit/VOC%s/labels/%s.txt'%(year, image_id), 'w')
+        convert_annotation(year, image_id, in_file, out_file)
+        out_file.close()
+        in_file.close()
     list_file.close()
 
